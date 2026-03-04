@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser')
 const morgan = require('morgan');
 const dbConnect =require('./config/dbConnection');
 const errorhandler =require('./middlewares/errorhandler');
+const passport=require('passport')
 
 
 //router paths
@@ -18,6 +19,7 @@ dotenv.config();
 
 //db connect
 dbConnect();
+require('./config/passport'); // Load Google strategy
 
 const app=express();
 
@@ -28,6 +30,7 @@ app.use(bodyPerser.json());
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
+app.use(passport.initialize());
 
 
 //router

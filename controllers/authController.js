@@ -5,6 +5,7 @@ const generateOtp = require('../helper/otp_generator');
 const SendEmails = require('../helper/email_sender');
 const jwtToken = require('../config/jwtToken');
 const crypto=require('crypto');
+const passport = require('passport');
 
 
 class AuthController{
@@ -96,6 +97,10 @@ class AuthController{
         user.isEmailVerified = true;
         user.otp = 'none'; // Clear the OTP
         user.otpExpires = null; // Clear OTP expiration
+        await SendEmails.sendWelcomeEmail(
+            user.email,
+            user.fullName
+        );
         await user.save();
 
         res.status(200).json({
@@ -314,7 +319,52 @@ class AuthController{
         } catch (error) {
             throw new Error("Logout failed");
         }
-});
+    });
+
+    static googleAuth = passport.authenticate('google', {
+    scope: ['profile', 'email']
+    });
+
+    static googleCallback = [
+        passport.authenticate('google', { failureRedirect: '/login', session: false }),
+        
+        asynchandler(async (req, res) => {
+            try {
+                const user = req.user;
+            
+                const refreshToken = jwtToken.generateRefreshToken(user.id, user.role);
+                await User.findByIdAndUpdate(user.id, {
+                    refreshToken: refreshToken,
+                    isLogin: true,
+                });
+            
+                res.cookie("refreshToken", refreshToken, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: "strict",
+                    maxAge: 72 * 60 * 60 * 1000,
+                });
+            
+                const token = jwtToken.generateToken(user.id, user.role, user.email);
+            
+                // Return JSON response with redirect URL
+                return res.status(200).json({
+                    token: token,
+                    refreshToken: refreshToken,
+                    redirectUrl: `${process.env.CLIENT_URL}/oauth-success?token=${token}`,
+                    success: true
+                });
+            
+            } catch (error) {
+                return res.status(500).json({
+                success: false,
+                message: "Authentication failed"
+                });
+            }
+        })
+    ];
+
+
 
 }
 

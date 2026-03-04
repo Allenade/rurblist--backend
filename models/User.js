@@ -14,17 +14,25 @@ var userSchema= new mongoose.Schema({
         required: true,
         unique: true
     },
-    username:{
-        type:String,
+    username: {
+        type: String,
         unique: true,
-        required: false,
+        sparse: true,
+        trim: true,
+        lowercase: true,
+        required: false
+    },
+    googleId: {
+    type: String,
+    unique: true,
+    required: false
     },
     profileImage:{
         type:String
     },
     phoneNumber:{
         type:String,
-        required: true,
+        required: false,
         unique: true
     },
     password:{

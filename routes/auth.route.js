@@ -46,6 +46,10 @@ Route.post("/login", AuthController.loginUser);
 // Logout user (requires authentication)
 Route.post('/logout', Checker.authmiddleware, AuthController.logout);
 
+// Google Auth routes
+Route.get('/google-auth', AuthController.googleAuth);
+Route.get('/google/callback', AuthController.googleCallback);
+
 
 Route.use(errorHandler.notfound);
 Route.use(errorHandler.errorHandler);
